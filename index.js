@@ -1,101 +1,62 @@
-async function fetchData(searchTerm) {
-	const response = await axios.get('http://www.omdbapi.com/', {
-		params: {
-			apikey: 'acd9d2bc',
-			s: searchTerm,
-			// i: 'tt0848228'
-		}
-	});
+//Here, we call the autocomplete function and pass movie (or any
+// other) information as arguments
+createAutocomplete({
+  //Root shows where to render the autocomplete to
+  root: document.querySelector("#left-autocomplete"),
 
-	if (response.data.Error) {
-		return []
-	}
+  //RenderOption shows how to render an individual item
+  renderOption(movie) {
+    //renderOption shows the options in the dropdown
+    const imgSrc = movie.Poster === "N/A" ? "" : movie.Poster;
+    return `
+        <img src="${imgSrc}"/>
+        ${movie.Title} (${movie.Year})
+	`;
+  },
 
-	return response.data.Search;
-}
+  //OnOptionSelect indicates what should be done when a user clicks on an option
+  onOptionSelect(movie) {
+    onMovieSelect(movie);
+  },
 
-//everything within our dropdown search results (ROOT)
-const root = document.querySelector('.autocomplete');
-root.innerHTML = `
-<label><b>Search for a Movie</b></label>
-<input class="input"/>
-<div class="dropdown">
-	<div class="dropdown-menu"> 
-		<div class="dropdown-content results"></div>
-	</div>
-</div>
-`;
+  //InputValue shows what to backfill into the search field when the user clicks on an option
+  inputValue(movie) {
+    return movie.Title;
+  },
 
+  //FetchData is how the data is fetched from the API
+  async fetchData(searchTerm) {
+    const response = await axios.get("http://www.omdbapi.com/", {
+      params: {
+        apikey: "acd9d2bc",
+        s: searchTerm,
+        // i: 'tt0848228'
+      },
+    });
 
-const input = document.querySelector('input');
-const dropdown = document.querySelector('.dropdown');
-const resultsWrapper = document.querySelector('.results');
+    if (response.data.Error) {
+      return [];
+    }
 
-
-const onInput = async event => {
-	//we get our movies list from here
-	const moviesList = await fetchData(event.target.value.trim());
-
-	//If there are no movies, we need to close the dropdown
-	if (!moviesList.length) {
-		dropdown.classList.remove('is-active');
-
-		//The return statement prevents the rest of the code from running
-		return;
-	}
-
-	// Clear out results before the next search
-	resultsWrapper.innerHTML = '';
-
-	dropdown.classList.add('is-active');
-	for (let movie of moviesList) {
-		const option = document.createElement('a');
-		const imgSrc = movie.Poster === "N/A" ? "" : movie.Poster;
-
-		option.classList.add('dropdown-item');
-
-		//Creating the innerHTML for each HTML
-		option.innerHTML = `
-				<img src="${imgSrc}"/>
-				${movie.Title}
-			`;
-
-		option.addEventListener('click', (event) => {
-			dropdown.classList.remove('is-active');
-			input.value = movie.Title;
-
-			onMovieSelect(movie);
-		});
-
-		resultsWrapper.appendChild(option)
-	}
-};
-
-input.addEventListener('input', debounce(onInput, 500));
-
-//Clearing the dropdown if anywhere else is clicked. So we say if the event target is not one of the elements in the root, we should do something
-document.addEventListener('click', event => {
-	if (!root.contains(event.target)) {
-		dropdown.classList.remove('is-active');
-	}
+    return response.data.Search;
+  },
 });
 
-
 //Function for the second request when a particular movie is selected
-const onMovieSelect = async movie => {
-	const response = await axios.get('http://www.omdbapi.com/', {
-		params: {
-			apikey: 'acd9d2bc',
-			i: movie.imdbID
-		}
-	});
+const onMovieSelect = async (movie) => {
+  const response = await axios.get("http://www.omdbapi.com/", {
+    params: {
+      apikey: "acd9d2bc",
+      i: movie.imdbID,
+    },
+  });
 
-	document.querySelector('#summary').innerHTML = movieTemplate(response.data);
-}
+  document.querySelector("#summary").innerHTML = movieTemplate(response.data);
+};
 
 //After selecting the movie, we should do the following (display from the response object the various values we want to display on the page)
 const movieTemplate = (movieDetail) => {
-	return `
+  return `
 		<article class="media">
 			<figure class="media-left">
 				<p class="image">
@@ -131,4 +92,4 @@ const movieTemplate = (movieDetail) => {
 			 <p class="sub-title">IMDB Votes</p>
 		  </article>
 	`;
-}
+};
