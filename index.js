@@ -1,9 +1,7 @@
 //Here, we call the autocomplete function and pass movie (or any
 // other) information as arguments
-createAutocomplete({
-  //Root shows where to render the autocomplete to
-  root: document.querySelector("#left-autocomplete"),
 
+const autoCompleteConfig = {
   //RenderOption shows how to render an individual item
   renderOption(movie) {
     //renderOption shows the options in the dropdown
@@ -14,12 +12,7 @@ createAutocomplete({
 	`;
   },
 
-  //OnOptionSelect indicates what should be done when a user clicks on an option
-  onOptionSelect(movie) {
-    onMovieSelect(movie);
-  },
-
-  //InputValue shows what to backfill into the search field when the user clicks on an option
+  //InputValue shows what to back-fill into the search field when the user clicks on an option
   inputValue(movie) {
     return movie.Title;
   },
@@ -40,10 +33,40 @@ createAutocomplete({
 
     return response.data.Search;
   },
+};
+
+//Left autocomplete widget
+createAutocomplete({
+  //Making use of SPREAD to add one Object to another
+  ...autoCompleteConfig,
+
+  //Root shows where to render the autocomplete to
+  root: document.querySelector("#left-autocomplete"),
+
+  //OnOptionSelect indicates what should be done when a user clicks on an option
+  onOptionSelect(movie) {
+    document.querySelector(".tutorial").classList.add("is-hidden");
+    onMovieSelect(movie, document.querySelector("#left-summary"));
+  },
+});
+
+//Right autocomplete widget
+createAutocomplete({
+  //Making use of SPREAD to add one Object to another
+  ...autoCompleteConfig,
+
+  //Root shows where to render the autocomplete to
+  root: document.querySelector("#right-autocomplete"),
+
+  //OnOptionSelect indicates what should be done when a user clicks on an option
+  onOptionSelect(movie) {
+    document.querySelector(".tutorial").classList.add("is-hidden");
+    onMovieSelect(movie, document.querySelector("#right-summary"));
+  },
 });
 
 //Function for the second request when a particular movie is selected
-const onMovieSelect = async (movie) => {
+const onMovieSelect = async (movie, summaryElement) => {
   const response = await axios.get("http://www.omdbapi.com/", {
     params: {
       apikey: "acd9d2bc",
@@ -51,7 +74,8 @@ const onMovieSelect = async (movie) => {
     },
   });
 
-  document.querySelector("#summary").innerHTML = movieTemplate(response.data);
+  //Summary element indicates the target element for rendering a specific after it's selected
+  summaryElement.innerHTML = movieTemplate(response.data);
 };
 
 //After selecting the movie, we should do the following (display from the response object the various values we want to display on the page)
